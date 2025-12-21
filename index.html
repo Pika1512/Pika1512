@@ -486,37 +486,62 @@
             hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
 
             hands.onResults(results => {
-                ctx.clearRect(0,0,100,75); ctx.drawImage(results.image, 0, 0, 100, 75);
+    const cw = canvas.clientWidth;
+    const ch = canvas.clientHeight;
 
-                // --- Hand Logic  ---
-                if (results.multiHandLandmarks.length === 2) {
-                    const h1 = results.multiHandLandmarks[0]; const h2 = results.multiHandLandmarks[1];
-                    const distIndex = Math.hypot(h1[8].x - h2[8].x, h1[8].y - h2[8].y);
-                    const distThumb = Math.hypot(h1[4].x - h2[4].x, h1[4].y - h2[4].y);
-                    if (distIndex < 0.15 && distThumb < 0.15) {
-                        state = 'HEART'; return;
-                    }
-                }
+    // sync canvas size với CSS
+    if (canvas.width !== cw || canvas.height !== ch) {
+        canvas.width = cw;
+        canvas.height = ch;
+    }
 
-                if(results.multiHandLandmarks.length > 0) {
-                    const lm = results.multiHandLandmarks[0];
-                    handX = lm[9].x; 
-                    const tips = [8,12,16,20]; const wrist = lm[0];
-                    let openDist = 0; tips.forEach(i => openDist += Math.hypot(lm[i].x-wrist.x, lm[i].y-wrist.y));
-                    const avgDist = openDist / 4;
-                    const pinchDist = Math.hypot(lm[4].x-lm[8].x, lm[4].y-lm[8].y);
+    ctx.clearRect(0, 0, cw, ch);
 
-                    if (avgDist < 0.25) { 
-                        state = 'TREE'; 
-                    } else if (pinchDist < 0.05) {
-                        state = 'PHOTO'; 
-                    } else {
-                        state = 'EXPLODE'; 
-                    }
-                } else {
-                    state = 'TREE'; 
-                }
-            });
+    if (results.image) {
+        const vw = results.image.width;
+        const vh = results.image.height;
+
+        // scale kiểu "cover"
+        const scale = Math.max(cw / vw, ch / vh);
+        const dw = vw * scale;
+        const dh = vh * scale;
+        const dx = (cw - dw) / 2;
+        const dy = (ch - dh) / 2;
+
+        ctx.drawImage(results.image, dx, dy, dw, dh);
+    }
+
+    // ===== GIỮ NGUYÊN LOGIC HAND CỦA BẠN =====
+    if (results.multiHandLandmarks.length === 2) {
+        const h1 = results.multiHandLandmarks[0];
+        const h2 = results.multiHandLandmarks[1];
+        const distIndex = Math.hypot(h1[8].x - h2[8].x, h1[8].y - h2[8].y);
+        const distThumb = Math.hypot(h1[4].x - h2[4].x, h1[4].y - h2[4].y);
+        if (distIndex < 0.15 && distThumb < 0.15) {
+            state = 'HEART';
+            return;
+        }
+    }
+
+    if (results.multiHandLandmarks.length > 0) {
+        const lm = results.multiHandLandmarks[0];
+        handX = lm[9].x;
+
+        const tips = [8,12,16,20];
+        const wrist = lm[0];
+        let openDist = 0;
+        tips.forEach(i => openDist += Math.hypot(lm[i].x-wrist.x, lm[i].y-wrist.y));
+        const avgDist = openDist / 4;
+        const pinchDist = Math.hypot(lm[4].x-lm[8].x, lm[4].y-lm[8].y);
+
+        if (avgDist < 0.25) state = 'TREE';
+        else if (pinchDist < 0.05) state = 'PHOTO';
+        else state = 'EXPLODE';
+    } else {
+        state = 'TREE';
+    }
+});
+
 
             const cameraUtils = new Camera(video, {
                 onFrame: async () => { await hands.send({image: video}); }, width: 320, height: 240
