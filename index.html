@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Magic Christmas</title>
+<title>Magic Christmas - Fixed</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
@@ -14,10 +14,9 @@ body {
     margin: 0;
     overflow: hidden;
     background: black;
-    font-family: "Segoe UI", sans-serif;
+    font-family: 'Segoe UI', sans-serif;
 }
 
-/* THREE CANVAS */
 #canvas-container {
     width: 100vw;
     height: 100vh;
@@ -43,24 +42,24 @@ body {
 button {
     pointer-events: auto;
     cursor: pointer;
-    padding: 14px 48px;
-    font-size: 16px;
-    font-weight: 800;
-    border-radius: 30px;
-    border: 2px solid gold;
-    background: linear-gradient(#d32f2f, #8b0000);
+    background: linear-gradient(to bottom, #D32F2F, #8B0000);
     color: white;
-    box-shadow: 0 0 25px rgba(255,0,0,0.6);
-    animation: pulse 1.4s infinite;
+    border: 2px solid gold;
+    padding: 15px 50px;
+    border-radius: 30px;
+    font-weight: 800;
+    font-size: 16px;
+    box-shadow: 0 0 30px rgba(255,0,0,0.6);
+    animation: pulse 1.5s infinite;
 }
 
 @keyframes pulse {
-    0% {transform: scale(1)}
-    50% {transform: scale(1.06)}
-    100% {transform: scale(1)}
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
 }
 
-/* CAMERA PREVIEW – FULL */
+/* ===== CAMERA PREVIEW FULL ===== */
 #camera-preview {
     position: absolute;
     top: 15px;
@@ -74,20 +73,20 @@ button {
     border: 2px solid rgba(255,0,0,0.6);
 
     transform: scaleX(-1);
-    opacity: 0.9;
+    opacity: 0.95;
     z-index: 200;
 
     box-shadow:
-        0 0 20px rgba(255,0,0,0.4),
-        inset 0 0 25px rgba(255,255,255,0.05);
+        0 0 20px rgba(255,0,0,0.5),
+        inset 0 0 25px rgba(255,255,255,0.06);
 }
 
 #copyright {
     position: absolute;
     right: 15px;
     bottom: 10px;
-    font-size: 12px;
     color: rgba(255,255,255,0.35);
+    font-size: 12px;
     font-style: italic;
     z-index: 100;
 }
@@ -108,7 +107,7 @@ button {
     <button onclick="startSystem()">START MAGIC</button>
 </div>
 
-<div id="copyright">© vandiep</div>
+<div id="copyright">© by vandiep</div>
 
 <video class="input_video" style="display:none"></video>
 <canvas id="camera-preview"></canvas>
@@ -134,7 +133,7 @@ const CONFIG = {
     explodeRadius: 65
 };
 
-function createTexture(color) {
+function createGlow(color){
     const c = document.createElement("canvas");
     c.width = c.height = 128;
     const ctx = c.getContext("2d");
@@ -148,12 +147,12 @@ function createTexture(color) {
 }
 
 const textures = {
-    gold: createTexture("#FFD700"),
-    red: createTexture("#FF0000"),
-    gift: createTexture("#FFFFFF")
+    gold: createGlow("#FFD700"),
+    red: createGlow("#FF0000"),
+    gift: createGlow("#FFFFFF")
 };
 
-function init3D() {
+function init3D(){
     scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x000000,0.002);
 
@@ -161,7 +160,7 @@ function init3D() {
     camera.position.z = 100;
 
     renderer = new THREE.WebGLRenderer({antialias:true});
-    renderer.setSize(innerWidth, innerHeight);
+    renderer.setSize(innerWidth,innerHeight);
     renderer.setPixelRatio(Math.min(devicePixelRatio,2));
     document.getElementById("canvas-container").appendChild(renderer.domElement);
 
@@ -172,64 +171,54 @@ function init3D() {
     animate();
 }
 
-function createParticles(texture, count, size) {
-    const pos = [];
-    const targets = [];
-
+function createParticles(texture,count,size){
+    const pos=[], exp=[];
     for(let i=0;i<count;i++){
-        const h = Math.random()*CONFIG.treeHeight;
-        const r = (1-h/CONFIG.treeHeight)*CONFIG.treeBaseRadius*Math.random();
-        const a = Math.random()*Math.PI*2;
-        const x = Math.cos(a)*r;
-        const y = h - CONFIG.treeHeight/2;
-        const z = Math.sin(a)*r;
-        pos.push(x,y,z);
-
-        const ex = (Math.random()-0.5)*CONFIG.explodeRadius;
-        const ey = (Math.random()-0.5)*CONFIG.explodeRadius;
-        const ez = (Math.random()-0.5)*CONFIG.explodeRadius;
-        targets.push(ex,ey,ez);
+        const h=Math.random()*CONFIG.treeHeight;
+        const r=(1-h/CONFIG.treeHeight)*CONFIG.treeBaseRadius*Math.random();
+        const a=Math.random()*Math.PI*2;
+        pos.push(Math.cos(a)*r, h-CONFIG.treeHeight/2, Math.sin(a)*r);
+        exp.push(
+            (Math.random()-0.5)*CONFIG.explodeRadius,
+            (Math.random()-0.5)*CONFIG.explodeRadius,
+            (Math.random()-0.5)*CONFIG.explodeRadius
+        );
     }
+    const g=new THREE.BufferGeometry();
+    g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));
+    g.userData.exp=exp;
 
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.Float32BufferAttribute(pos,3));
-    g.userData.targets = targets;
-
-    const m = new THREE.PointsMaterial({
-        size,
-        map: texture,
-        transparent:true,
-        depthWrite:false,
-        blending:THREE.AdditiveBlending
+    const m=new THREE.PointsMaterial({
+        size,map:texture,transparent:true,
+        depthWrite:false,blending:THREE.AdditiveBlending
     });
 
-    const p = new THREE.Points(g,m);
+    const p=new THREE.Points(g,m);
     scene.add(p);
     return p;
 }
 
-function updateGroup(group, speed) {
-    const pos = group.geometry.attributes.position.array;
-    const tar = group.geometry.userData.targets;
-    for(let i=0;i<pos.length;i++){
-        const t = (state==="TREE") ? 0 : 1;
-        const target = t ? tar[i] : pos[i];
-        pos[i] += (target - pos[i]) * speed;
+function update(group,speed){
+    const p=group.geometry.attributes.position.array;
+    const t=group.geometry.userData.exp;
+    for(let i=0;i<p.length;i++){
+        const target = (state==="EXPLODE") ? t[i] : p[i];
+        p[i]+=(target-p[i])*speed;
     }
-    group.rotation.y += (handX-0.5)*0.01;
-    group.geometry.attributes.position.needsUpdate = true;
+    group.rotation.y+=(handX-0.5)*0.01;
+    group.geometry.attributes.position.needsUpdate=true;
 }
 
-function animate() {
+function animate(){
     requestAnimationFrame(animate);
-    updateGroup(groupGold,0.05);
-    updateGroup(groupRed,0.06);
-    updateGroup(groupGift,0.07);
+    update(groupGold,0.05);
+    update(groupRed,0.06);
+    update(groupGift,0.07);
     renderer.render(scene,camera);
 }
 
 window.addEventListener("resize",()=>{
-    camera.aspect = innerWidth/innerHeight;
+    camera.aspect=innerWidth/innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(innerWidth,innerHeight);
 });
@@ -239,12 +228,12 @@ function startSystem(){
     bgMusic.play().catch(()=>{});
     init3D();
 
-    const video = document.querySelector(".input_video");
-    const canvas = document.getElementById("camera-preview");
-    const ctx = canvas.getContext("2d");
+    const video=document.querySelector(".input_video");
+    const canvas=document.getElementById("camera-preview");
+    const ctx=canvas.getContext("2d");
 
-    const hands = new Hands({
-        locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
+    const hands=new Hands({
+        locateFile:file=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
     });
 
     hands.setOptions({
@@ -254,33 +243,36 @@ function startSystem(){
     });
 
     hands.onResults(res=>{
-        const cw = canvas.clientWidth;
-        const ch = canvas.clientHeight;
-        canvas.width = cw;
-        canvas.height = ch;
-
+        const cw=canvas.clientWidth;
+        const ch=canvas.clientHeight;
+        canvas.width=cw;
+        canvas.height=ch;
         ctx.clearRect(0,0,cw,ch);
+
         if(res.image){
-            const vw = res.image.width;
-            const vh = res.image.height;
-            const scale = Math.max(cw/vw, ch/vh);
-            const dw = vw*scale;
-            const dh = vh*scale;
-            ctx.drawImage(res.image,(cw-dw)/2,(ch-dh)/2,dw,dh);
+            const vw=res.image.width;
+            const vh=res.image.height;
+            const scale=Math.max(cw/vw,ch/vh);
+            ctx.drawImage(
+                res.image,
+                (cw-vw*scale)/2,
+                (ch-vh*scale)/2,
+                vw*scale,
+                vh*scale
+            );
         }
 
         if(res.multiHandLandmarks.length){
-            const lm = res.multiHandLandmarks[0];
-            handX = lm[9].x;
-            const pinch = Math.hypot(lm[4].x-lm[8].x,lm[4].y-lm[8].y);
-            state = pinch < 0.05 ? "EXPLODE" : "TREE";
+            const lm=res.multiHandLandmarks[0];
+            handX=lm[9].x;
+            const pinch=Math.hypot(lm[4].x-lm[8].x,lm[4].y-lm[8].y);
+            state=pinch<0.05?"EXPLODE":"TREE";
         } else state="TREE";
     });
 
-    const cam = new Camera(video,{
-        onFrame: async()=> await hands.send({image:video}),
-        width:640,
-        height:480
+    const cam=new Camera(video,{
+        onFrame:async()=>await hands.send({image:video}),
+        width:640,height:480
     });
     cam.start();
 }
