@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Magic Christmas - Camera Full</title>
+<title>Magic Christmas - Full Camera</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
@@ -17,7 +17,7 @@ body{
     font-family:"Segoe UI Emoji","Segoe UI",sans-serif;
 }
 
-/* ===== CAMERA FULL ===== */
+/* ===== CAMERA FULL SCREEN ===== */
 video.input_video{
     position:fixed;
     top:0;
@@ -29,7 +29,7 @@ video.input_video{
     z-index:-2;
 }
 
-/* ===== THREE.JS ===== */
+/* ===== THREE CANVAS ===== */
 #canvas-container{
     position:fixed;
     top:0;
@@ -76,16 +76,16 @@ button{
     100%{transform:scale(1)}
 }
 
-/* ===== CAMERA PREVIEW ===== */
+/* ===== CAMERA PREVIEW (FIX TO + RÕ) ===== */
 #camera-preview{
     position:absolute;
-    top:15px;
-    right:15px;
-    width:120px;
-    height:90px;
-    border:2px solid rgba(255,0,0,.5);
-    border-radius:8px;
-    opacity:.6;
+    top:20px;
+    right:20px;
+    width:240px;
+    height:180px;
+    border:3px solid red;
+    border-radius:12px;
+    opacity:.8;
     transform:scaleX(-1);
     z-index:20;
 }
@@ -105,13 +105,12 @@ button{
 </div>
 
 <div id="canvas-container"></div>
-
 <video class="input_video" playsinline></video>
 <canvas id="camera-preview"></canvas>
 
 <script>
-/* ===== THREE BASIC ===== */
-let scene,camera,renderer;
+/* ================= THREE BASIC ================= */
+let scene, camera, renderer;
 let state="TREE";
 let handX=0.5;
 
@@ -131,7 +130,7 @@ function animate(){
     renderer.render(scene,camera);
 }
 
-/* ===== START SYSTEM ===== */
+/* ================= START SYSTEM ================= */
 function startSystem(){
     document.getElementById("btnStart").style.display="none";
     init3D();
@@ -139,6 +138,10 @@ function startSystem(){
     const video=document.querySelector(".input_video");
     const canvas=document.getElementById("camera-preview");
     const ctx=canvas.getContext("2d");
+
+    /* FIX: sync canvas size */
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
 
     const hands=new Hands({
         locateFile:(f)=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
@@ -152,8 +155,8 @@ function startSystem(){
     });
 
     hands.onResults(res=>{
-        ctx.clearRect(0,0,120,90);
-        ctx.drawImage(res.image,0,0,120,90);
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(res.image,0,0,canvas.width,canvas.height);
 
         if(!res.multiHandLandmarks.length){
             state="TREE";
@@ -195,6 +198,8 @@ function startSystem(){
     window.addEventListener("resize",()=>{
         video.width=innerWidth;
         video.height=innerHeight;
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
         camera.aspect=innerWidth/innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(innerWidth,innerHeight);
