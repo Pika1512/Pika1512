@@ -484,7 +484,7 @@
             
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
             hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-//////////////////////////////////////
+
             hands.onResults(results => {
                 const cw = canvas.clientWidth;
                 const ch = canvas.clientHeight;
