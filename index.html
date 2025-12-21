@@ -486,7 +486,26 @@
             hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
 
             hands.onResults(results => {
-                ctx.clearRect(0,0,100,75); ctx.drawImage(results.image, 0, 0, 100, 75);
+                const cw = canvas.clientWidth;
+                const ch = canvas.clientHeight;
+                
+                // đồng bộ canvas thật với CSS
+                if (canvas.width !== cw || canvas.height !== ch) {
+                    canvas.width = cw;
+                    canvas.height = ch;
+                }
+                
+                ctx.clearRect(0, 0, cw, ch);
+                
+                if (results.image) {
+                    const vw = results.image.width;
+                    const vh = results.image.height;
+                
+                    // cover toàn bộ khung đỏ
+                    const scale = Math.max(cw / vw, ch / vh);
+                    const dw = vw * scale;
+                    const dh = vh * scale
+
 
                 // --- Hand Logic  ---
                 if (results.multiHandLandmarks.length === 2) {
