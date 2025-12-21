@@ -484,12 +484,11 @@
             
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
             hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-
+//////////////////////////////////////
             hands.onResults(results => {
                 const cw = canvas.clientWidth;
                 const ch = canvas.clientHeight;
                 
-                // đồng bộ canvas thật với CSS
                 if (canvas.width !== cw || canvas.height !== ch) {
                     canvas.width = cw;
                     canvas.height = ch;
@@ -501,10 +500,15 @@
                     const vw = results.image.width;
                     const vh = results.image.height;
                 
-                    // cover toàn bộ khung đỏ
                     const scale = Math.max(cw / vw, ch / vh);
                     const dw = vw * scale;
-                    const dh = vh * scale
+                    const dh = vh * scale;
+                    const dx = (cw - dw) / 2;
+                    const dy = (ch - dh) / 2;
+                
+                    ctx.drawImage(results.image, dx, dy, dw, dh);
+                }
+
 
 
                 // --- Hand Logic  ---
