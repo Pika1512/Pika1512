@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Magic Christmas</title>
+<title>Magic Christmas - Final Clean</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
@@ -16,55 +16,49 @@ body{
     background:#000;
     font-family:'Segoe UI',sans-serif;
 }
-
 #canvas-container{
     width:100%;
     height:100vh;
 }
 
-/* ===== UI ===== */
+/* UI */
 #ui-layer{
     position:absolute;
     bottom:30px;
     width:100%;
     text-align:center;
-    z-index:30;
     pointer-events:none;
+    z-index:100;
 }
-
 .guide{
     color:rgba(255,255,255,.7);
     font-size:14px;
     margin-bottom:15px;
 }
-
 button{
     pointer-events:auto;
     cursor:pointer;
-    padding:14px 48px;
-    border-radius:30px;
-    border:2px solid #FFD700;
     background:linear-gradient(#D32F2F,#8B0000);
     color:#fff;
+    border:2px solid #FFD700;
+    padding:15px 50px;
+    border-radius:30px;
     font-weight:800;
-    box-shadow:0 0 25px rgba(255,0,0,.6);
+    box-shadow:0 0 30px rgba(255,0,0,.6);
 }
 
-/* ===== CAMERA PREVIEW (PRO) ===== */
+/* CAMERA PREVIEW – FIX */
 #camera-preview{
     position:absolute;
-    top:20px;
-    right:20px;
-    width:360px;
+    top:15px;
+    right:15px;
+    width:320px;
     height:240px;
     background:#000;
-    border-radius:18px;
+    border-radius:14px;
     border:2px solid rgba(255,0,0,.6);
     transform:scaleX(-1);
-    box-shadow:
-        0 0 25px rgba(255,0,0,.5),
-        inset 0 0 40px rgba(255,255,255,.05);
-    z-index:50;
+    z-index:200;
 }
 
 #copyright{
@@ -120,6 +114,7 @@ function animate(){
 
 /* ================= START ================= */
 function startSystem(){
+    document.querySelector('button').style.display='none';
     init3D();
     initHands();
 }
@@ -153,7 +148,7 @@ function initHands(){
         const vw=results.image.width;
         const vh=results.image.height;
 
-        /* ===== cover scale ===== */
+        // object-fit: cover
         const scale=Math.max(cw/vw,ch/vh);
         const dw=vw*scale;
         const dh=vh*scale;
@@ -162,27 +157,29 @@ function initHands(){
 
         ctx.drawImage(results.image,dx,dy,dw,dh);
 
-        /* overlay nhẹ */
-        ctx.fillStyle="rgba(0,0,0,0.08)";
-        ctx.fillRect(0,0,cw,ch);
+        // ===== GESTURE LOGIC (GIỮ NGUYÊN) =====
+        if(results.multiHandLandmarks.length===2){
+            const h1=results.multiHandLandmarks[0];
+            const h2=results.multiHandLandmarks[1];
+            const d1=Math.hypot(h1[8].x-h2[8].x,h1[8].y-h2[8].y);
+            const d2=Math.hypot(h1[4].x-h2[4].x,h1[4].y-h2[4].y);
+            if(d1<0.15 && d2<0.15){ state='HEART'; return; }
+        }
 
-        /* ===== gesture ===== */
         if(results.multiHandLandmarks.length){
             const lm=results.multiHandLandmarks[0];
             handX=lm[9].x;
-
             const tips=[8,12,16,20];
             let open=0;
-            tips.forEach(i=>{
-                open+=Math.hypot(lm[i].x-lm[0].x,lm[i].y-lm[0].y);
-            });
+            tips.forEach(i=>open+=Math.hypot(lm[i].x-lm[0].x,lm[i].y-lm[0].y));
             open/=4;
-
             const pinch=Math.hypot(lm[4].x-lm[8].x,lm[4].y-lm[8].y);
 
             if(open<0.25) state='TREE';
             else if(pinch<0.05) state='PHOTO';
             else state='EXPLODE';
+        }else{
+            state='TREE';
         }
     });
 
